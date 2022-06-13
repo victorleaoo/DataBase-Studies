@@ -36,7 +36,7 @@ int verifica_CPF(char cpf[11]){
             cpf_valido++;
         }
     }
-    FILE *ponteiro = fopen("arquivo", "rb");
+    FILE *ponteiro = fopen("teste", "rb");
     if (!ponteiro){
         return cpf_valido;
     } else{
@@ -53,22 +53,36 @@ int verifica_CPF(char cpf[11]){
     return cpf_valido;
 }
 
+int compare(const void * a, const void * b){
+    const Proprietario * cpf_1 = (Proprietario *) a;
+    const Proprietario * cpf_2 = (Proprietario *) b;
+
+    return strcmp(cpf_1 -> cpf, cpf_2 -> cpf);
+}
+
 int imprimir_dados(){
     Proprietario prop;
-    FILE *ponteiro = fopen("arquivo", "rb");
+    Proprietario prop_arm[100];
+    int cont = 0;
+    FILE *ponteiro = fopen("teste", "rb");
     if (!ponteiro){
         printf("\nErro ao tentar ler o arquivo (ja cadastrou alguem uma vez?)\n\n");
         return 0;
     }
     printf("----------- Proprietarios e Automoveis cadastrados -----------\n");
     while (fread(&prop, sizeof(Proprietario), 1, ponteiro)){
-        printf("%s - %s\n", prop.nome, prop.cpf);
+        prop_arm[cont] = prop;
+        fflush(stdin);
+        cont++;
+    }
+    qsort(prop_arm, cont, sizeof(Proprietario), compare);
+    for(int i = 0; i < cont; i++){
+        printf("%s - %s\n", prop_arm[i].nome, prop_arm[i].cpf);
         printf("-> Automoveis desse Proprietario: \n");
-        for(int i = 0; i < prop.qntd_carros; i++){
-            printf("%d) Placa: %s - RENAVAM: %s\n", i+1, prop.carros[i].placa, prop.carros[i].renavam);
+        for(int j = 0; j < prop_arm[i].qntd_carros; j++){
+            printf("%d) Placa: %s - RENAVAM: %s\n", j+1, prop_arm[i].carros[j].placa, prop_arm[i].carros[j].renavam);
         }
         printf("\n");
-        fflush(stdin);
     }
     fclose(ponteiro);
     return 0;
@@ -106,7 +120,7 @@ Proprietario cadastrar_prop(int contador, Proprietario *prop){
     }
     
     // Criação/Abertura de um arquivo binário para a escrita
-    FILE *ponteiro = fopen("arquivo", "ab");
+    FILE *ponteiro = fopen("teste", "ab");
     fwrite(&prop[contador], sizeof(Proprietario), 1, ponteiro);
     fclose(ponteiro);
     
