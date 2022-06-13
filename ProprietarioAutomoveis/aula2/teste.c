@@ -62,8 +62,6 @@ int compare(const void * a, const void * b){
 
 int imprimir_dados(){
     Proprietario prop;
-    Proprietario prop_arm[100];
-    int cont = 0;
     FILE *ponteiro = fopen("teste", "rb");
     if (!ponteiro){
         printf("\nErro ao tentar ler o arquivo (ja cadastrou alguem uma vez?)\n\n");
@@ -71,26 +69,23 @@ int imprimir_dados(){
     }
     printf("----------- Proprietarios e Automoveis cadastrados -----------\n");
     while (fread(&prop, sizeof(Proprietario), 1, ponteiro)){
-        prop_arm[cont] = prop;
-        fflush(stdin);
-        cont++;
-    }
-    qsort(prop_arm, cont, sizeof(Proprietario), compare);
-    for(int i = 0; i < cont; i++){
-        printf("%s - %s\n", prop_arm[i].nome, prop_arm[i].cpf);
+        printf("%s - %s\n", prop.nome, prop.cpf);
         printf("-> Automoveis desse Proprietario: \n");
-        for(int j = 0; j < prop_arm[i].qntd_carros; j++){
-            printf("%d) Placa: %s - RENAVAM: %s\n", j+1, prop_arm[i].carros[j].placa, prop_arm[i].carros[j].renavam);
+        for(int i = 0; i < prop.qntd_carros; i++){
+            printf("%d) Placa: %s - RENAVAM: %s\n", i+1, prop.carros[i].placa, prop.carros[i].renavam);
         }
         printf("\n");
+        fflush(stdin);
     }
     fclose(ponteiro);
     return 0;
 }
 
 Proprietario cadastrar_prop(int contador, Proprietario *prop){
-    int n_auto, cpf_valido;
+    int n_auto, cpf_valido, cont = 0;
     char cpf[11];
+    // Armazenamento dos proprietários cadastrados para a ordenação
+    Proprietario prop_sort[100], prop_recuperar;
 
     printf("----------- Cadastro de Proprietario -----------\n");
     printf("Informe o nome do proprietario: \n");
@@ -120,9 +115,25 @@ Proprietario cadastrar_prop(int contador, Proprietario *prop){
     }
     
     // Criação/Abertura de um arquivo binário para a escrita
-    FILE *ponteiro = fopen("teste", "ab");
-    fwrite(&prop[contador], sizeof(Proprietario), 1, ponteiro);
-    fclose(ponteiro);
+    FILE *cadastro_inicial = fopen("teste", "ab");
+    fwrite(&prop[contador], sizeof(Proprietario), 1, cadastro_inicial);
+    fclose(cadastro_inicial);
+
+    // Escrita, agora, do arquivo seguindo a chave (CPF)
+    FILE *recuperar = fopen("teste", "rb");
+    while (fread(&prop_recuperar, sizeof(Proprietario), 1, recuperar)){
+        prop_sort[cont] = prop_recuperar;
+        fflush(stdin);
+        cont++;
+    }
+    qsort(prop_sort, cont, sizeof(Proprietario), compare);
+    fclose(recuperar);
+
+    FILE *cadastro_chave = fopen("teste", "wb");
+    for(int i = 0; i < cont; i++){
+        fwrite(&prop_sort[i], sizeof(Proprietario), 1, cadastro_chave);
+    }
+    fclose(cadastro_chave);
     
     printf("Proprietario e seus automoveis cadastrados com sucesso! Caso queira cadastrar outro proprietario e seus carros, selecione a opcao 1 mais uma vez.\n\n");
 }
